@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Árbol de Segmentos - Varianza</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+        
+        .subtitle {
+            color: var(--secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .card h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        input, button {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-group button {
+            flex: 1;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .array-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .array-item {
+            padding: 8px 12px;
+            background: var(--light);
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+            min-width: 50px;
+        }
+        
+        .array-index {
+            font-size: 0.7rem;
+            color: #6c757d;
+            margin-top: 3px;
+        }
+        
+        .results {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .result-item {
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .result-value {
+            font-family: 'Courier New', monospace;
+            background: #e9ecef;
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .tree-container {
+            margin-top: 20px;
+            overflow: auto;
+            max-height: 500px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .tree-level {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        
+        .tree-node {
+            padding: 10px 15px;
+            margin: 0 10px;
+            background: white;
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            min-width: 120px;
+        }
+        
+        .node-id {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        
+        .node-values {
+            font-size: 0.8rem;
+        }
+        
+        .test-case {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .test-case:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+        
+        .test-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+        
+        .math-info {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .formula {
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .variance-controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Árbol de Segmentos para Varianza</h1>
+            <p class="subtitle">Calcula eficientemente la varianza de cualquier subconjunto de datos con actualizaciones en tiempo real</p>
+        </header>
+        
+        <div class="grid">
+            <div>
+                <div class="card">
+                    <h2>Datos y Configuración</h2>
+                    
+                    <div class="form-group">
+                        <label for="dataInput">Datos (separados por comas):</label>
+                        <input type="text" id="dataInput" value="1, 2, 3, 4, 5">
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button id="buildTreeBtn">Construir Árbol</button>
+                        <button id="randomDataBtn" class="btn-outline">Datos Aleatorios</button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Array actual:</label>
+                        <div class="array-display" id="currentArrayDisplay"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Casos de prueba:</label>
+                        <div class="test-case" data-test="1,2,3,4,5">
+                            <div class="test-title">[1, 2, 3, 4, 5]</div>
+                            <div>Datos ordenados (varianza = 2)</div>
+                        </div>
+                        <div class="test-case" data-test="10,10,10,10,10">
+                            <div class="test-title">[10, 10, 10, 10, 10]</div>
+                            <div>Valores iguales (varianza = 0)</div>
+                        </div>
+                        <div class="test-case" data-test="1,100,1,100,1">
+                            <div class="test-title">[1, 100, 1, 100, 1]</div>
+                            <div>Alta variabilidad</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>Operaciones</h2>
+                    
+                    <div class="form-group">
+                        <label for="updateIndex">Actualizar valor en índice:</label>
+                        <input type="number" id="updateIndex" min="0" value="2">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="updateValue">Nuevo valor:</label>
+                        <input type="number" id="updateValue" value="10">
+                    </div>
+                    
+                    <button id="updateBtn">Actualizar</button>
+                </div>
+            </div>
+            
+            <div>
+                <div class="card">
+                    <h2>Visualización y Cálculos</h2>
+                    
+                    <!-- Controles para calcular varianza -->
+                    <div class="variance-controls">
+                        <div class="form-group">
+                            <label for="queryStart">Rango de consulta:</label>
+                            <div class="btn-group">
+                                <input type="number" id="queryStart" min="0" value="0" placeholder="Inicio">
+                                <input type="number" id="queryEnd" min="0" value="4" placeholder="Fin">
+                            </div>
+                        </div>
+                        
+                        <button id="queryBtn">Calcular Varianza</button>
+                    </div>
+                    
+                    <div id="treeVisualization" class="tree-container">
+                        <p style="text-align: center; color: #6c757d;">El árbol se mostrará aquí después de construirlo</p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>Resultados</h2>
+                    <div id="resultsContainer" class="results"></div>
+                </div>
+                
+                <div class="math-info">
+                    <h3>¿Cómo funciona?</h3>
+                    <p>Cada nodo del árbol almacena:</p>
+                    <ul style="margin-left: 20px; margin-bottom: 10px;">
+                        <li>Suma de los valores en su segmento</li>
+                        <li>Suma de los cuadrados de los valores</li>
+                    </ul>
+                    <p>Con estos datos, la varianza se calcula como:</p>
+                    <div class="formula">Varianza = (Σx² / N) - (Σx / N)²</div>
+                    <p><strong>Complejidad:</strong> Construcción O(N), Actualización O(log N), Consulta O(log N)</p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Árbol de Segmentos para Cálculo de Varianza - Estructuras de Datos</p>
+        </footer>
+    </div>
+
+    <script>
+        // Implementación del Árbol de Segmentos para Varianza
+        class SegmentTreeVariance {
+            constructor(data) {
+                this.n = data.length;
+                this.tree = new Array(4 * this.n).fill(null);
+                this.data = [...data];
+                this._build(data, 1, 0, this.n - 1);
+            }
+
+            _build(data, node, start, end) {
+                if (start === end) {
+                    const val = data[start];
+                    this.tree[node] = { sum: val, sqSum: val * val };
+                } else {
+                    const mid = Math.floor((start + end) / 2);
+                    const leftChild = 2 * node;
+                    const rightChild = 2 * node + 1;
+
+                    this._build(data, leftChild, start, mid);
+                    this._build(data, rightChild, mid + 1, end);
+
+                    this.tree[node] = {
+                        sum: this.tree[leftChild].sum + this.tree[rightChild].sum,
+                        sqSum: this.tree[leftChild].sqSum + this.tree[rightChild].sqSum
+                    };
+                }
+            }
+
+            update(idx, val) {
+                if (idx < 0 || idx >= this.n) {
+                    console.error("Índice fuera de rango");
+                    return;
+                }
+                this.data[idx] = val;
+                this._update(1, 0, this.n - 1, idx, val);
+            }
+
+            _update(node, start, end, idx, val) {
+                if (start === end) {
+                    this.tree[node] = { sum: val, sqSum: val * val };
+                } else {
+                    const mid = Math.floor((start + end) / 2);
+                    const leftChild = 2 * node;
+                    const rightChild = 2 * node + 1;
+
+                    if (idx <= mid) {
+                        this._update(leftChild, start, mid, idx, val);
+                    } else {
+                        this._update(rightChild, mid + 1, end, idx, val);
+                    }
+
+                    this.tree[node] = {
+                        sum: this.tree[leftChild].sum + this.tree[rightChild].sum,
+                        sqSum: this.tree[leftChild].sqSum + this.tree[rightChild].sqSum
+                    };
+                }
+            }
+
+            _query(node, start, end, l, r) {
+                if (r < start || end < l) {
+                    return { sum: 0, sqSum: 0 };
+                }
+
+                if (l <= start && end <= r) {
+                    return this.tree[node];
+                }
+
+                const mid = Math.floor((start + end) / 2);
+                const p1 = this._query(2 * node, start, mid, l, r);
+                const p2 = this._query(2 * node + 1, mid + 1, end, l, r);
+
+                return {
+                    sum: p1.sum + p2.sum,
+                    sqSum: p1.sqSum + p2.sqSum
+                };
+            }
+
+            getVariance(l, r) {
+                if (l > r || l < 0 || r >= this.n) return 0;
+
+                const result = this._query(1, 0, this.n - 1, l, r);
+                const nItems = r - l + 1;
+                if (nItems === 0) return 0;
+
+                const mean = result.sum / nItems;
+                const variance = (result.sqSum / nItems) - (mean * mean);
+
+                return variance;
+            }
+
+            getTreeStructure() {
+                const levels = [];
+                const queue = [{node: 1, level: 0, start: 0, end: this.n - 1}];
+                
+                while (queue.length > 0) {
+                    const {node, level, start, end} = queue.shift();
+                    
+                    if (!levels[level]) {
+                        levels[level] = [];
+                    }
+                    
+                    if (this.tree[node]) {
+                        const nodeInfo = {
+                            node,
+                            sum: this.tree[node].sum,
+                            sqSum: this.tree[node].sqSum,
+                            start,
+                            end,
+                            isLeaf: start === end
+                        };
+                        
+                        levels[level].push(nodeInfo);
+                        
+                        if (start !== end) {
+                            const mid = Math.floor((start + end) / 2);
+                            const leftChild = 2 * node;
+                            const rightChild = 2 * node + 1;
+                            
+                            if (this.tree[leftChild] !== null) {
+                                queue.push({
+                                    node: leftChild, 
+                                    level: level + 1, 
+                                    start: start, 
+                                    end: mid
+                                });
+                            }
+                            
+                            if (this.tree[rightChild] !== null) {
+                                queue.push({
+                                    node: rightChild, 
+                                    level: level + 1, 
+                                    start: mid + 1, 
+                                    end: end
+                                });
+                            }
+                        }
+                    }
+                }
+                
+                return levels;
+            }
+        }
+
+        // Variables globales
+        let segmentTree = null;
+
+        // Elementos del DOM
+        const dataInput = document.getElementById('dataInput');
+        const buildTreeBtn = document.getElementById('buildTreeBtn');
+        const randomDataBtn = document.getElementById('randomDataBtn');
+        const updateIndex = document.getElementById('updateIndex');
+        const updateValue = document.getElementById('updateValue');
+        const updateBtn = document.getElementById('updateBtn');
+        const queryStart = document.getElementById('queryStart');
+        const queryEnd = document.getElementById('queryEnd');
+        const queryBtn = document.getElementById('queryBtn');
+        const currentArrayDisplay = document.getElementById('currentArrayDisplay');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const treeVisualization = document.getElementById('treeVisualization');
+        const testCases = document.querySelectorAll('.test-case');
+
+        // Funciones de utilidad
+        function parseData(input) {
+            return input.split(',').map(item => parseFloat(item.trim())).filter(item => !isNaN(item));
+        }
+
+        function formatArray(array) {
+            return array.map((value, index) => 
+                `<div class="array-item">
+                    <div>${value}</div>
+                    <div class="array-index">[${index}]</div>
+                </div>`
+            ).join('');
+        }
+
+        function addResult(title, value) {
+            const resultElement = document.createElement('div');
+            resultElement.className = 'result-item';
+            resultElement.innerHTML = `
+                <div class="result-title">${title}</div>
+                <div class="result-value">${value}</div>
+            `;
+            resultsContainer.appendChild(resultElement);
+            resultsContainer.scrollTop = resultsContainer.scrollHeight;
+        }
+
+        function clearResults() {
+            resultsContainer.innerHTML = '';
+        }
+
+        function updateArrayDisplay() {
+            if (segmentTree) {
+                currentArrayDisplay.innerHTML = formatArray(segmentTree.data);
+                
+                const maxIndex = segmentTree.n - 1;
+                updateIndex.max = maxIndex;
+                queryStart.max = maxIndex;
+                queryEnd.max = maxIndex;
+                
+                if (parseInt(queryEnd.value) > maxIndex) {
+                    queryEnd.value = maxIndex;
+                }
+            } else {
+                currentArrayDisplay.innerHTML = '<em>No hay árbol construido</em>';
+            }
+        }
+
+        function visualizeTree() {
+            if (!segmentTree) {
+                treeVisualization.innerHTML = '<p style="text-align: center; color: #6c757d;">No hay árbol construido</p>';
+                return;
+            }
+            
+            const levels = segmentTree.getTreeStructure();
+            treeVisualization.innerHTML = '';
+            
+            // Mostrar solo los primeros 4 niveles para no saturar
+            const displayLevels = levels.slice(0, 4);
+            
+            displayLevels.forEach((level, levelIndex) => {
+                const levelDiv = document.createElement('div');
+                levelDiv.className = 'tree-level';
+                
+                level.forEach(node => {
+                    const nodeDiv = document.createElement('div');
+                    nodeDiv.className = 'tree-node';
+                    
+                    const rangeText = node.isLeaf ? 
+                        `[${node.start}]` : 
+                        `[${node.start}, ${node.end}]`;
+                    
+                    nodeDiv.innerHTML = `
+                        <div class="node-id">Nodo ${node.node}</div>
+                        <div class="node-values">
+                            <div>Suma: ${node.sum.toFixed(2)}</div>
+                            <div>Suma²: ${node.sqSum.toFixed(2)}</div>
+                            <div>${rangeText}</div>
+                        </div>
+                    `;
+                    
+                    levelDiv.appendChild(nodeDiv);
+                });
+                
+                treeVisualization.appendChild(levelDiv);
+            });
+            
+            if (levels.length > 4) {
+                const infoDiv = document.createElement('div');
+                infoDiv.style.textAlign = 'center';
+                infoDiv.style.color = '#6c757d';
+                infoDiv.style.marginTop = '15px';
+                infoDiv.innerHTML = `... y ${levels.length - 4} niveles más (árbol simplificado)`;
+                treeVisualization.appendChild(infoDiv);
+            }
+        }
+
+        function generateRandomData() {
+            const size = Math.floor(Math.random() * 8) + 5; // Entre 5 y 12 elementos
+            return Array.from({length: size}, () => Math.floor(Math.random() * 20) + 1);
+        }
+
+        // Event Listeners
+        buildTreeBtn.addEventListener('click', () => {
+            const data = parseData(dataInput.value);
+            
+            if (data.length === 0) {
+                alert('Por favor, ingresa datos válidos');
+                return;
+            }
+            
+            segmentTree = new SegmentTreeVariance(data);
+            updateArrayDisplay();
+            visualizeTree();
+            
+            addResult('Árbol construido', `Para ${data.length} elementos`);
+        });
+
+        randomDataBtn.addEventListener('click', () => {
+            const data = generateRandomData();
+            dataInput.value = data.join(', ');
+            
+            segmentTree = new SegmentTreeVariance(data);
+            updateArrayDisplay();
+            visualizeTree();
+            
+            addResult('Datos aleatorios', `Generados ${data.length} valores`);
+        });
+
+        updateBtn.addEventListener('click', () => {
+            if (!segmentTree) {
+                alert('Primero construye un árbol');
+                return;
+            }
+            
+            const index = parseInt(updateIndex.value);
+            const value = parseFloat(updateValue.value);
+            
+            if (isNaN(index) || isNaN(value)) {
+                alert('Por favor, ingresa valores válidos');
+                return;
+            }
+            
+            if (index < 0 || index >= segmentTree.n) {
+                alert(`Índice fuera de rango. Debe estar entre 0 y ${segmentTree.n - 1}`);
+                return;
+            }
+            
+            const oldValue = segmentTree.data[index];
+            segmentTree.update(index, value);
+            updateArrayDisplay();
+            visualizeTree();
+            
+            addResult('Valor actualizado', `Índice ${index}: ${oldValue} → ${value}`);
+        });
+
+        queryBtn.addEventListener('click', () => {
+            if (!segmentTree) {
+                alert('Primero construye un árbol');
+                return;
+            }
+            
+            const start = parseInt(queryStart.value);
+            const end = parseInt(queryEnd.value);
+            
+            if (isNaN(start) || isNaN(end)) {
+                alert('Por favor, ingresa valores válidos');
+                return;
+            }
+            
+            if (start < 0 || end >= segmentTree.n || start > end) {
+                alert(`Rango inválido. Debe estar entre 0 y ${segmentTree.n - 1}, con inicio <= fin`);
+                return;
+            }
+            
+            const variance = segmentTree.getVariance(start, end);
+            const subarray = segmentTree.data.slice(start, end + 1);
+            
+            addResult('Varianza calculada', 
+                `Rango [${start}, ${end}]: ${variance.toFixed(6)} (valores: [${subarray.join(', ')}])`);
+        });
+
+        // Cargar casos de prueba
+        testCases.forEach(testCase => {
+            testCase.addEventListener('click', () => {
+                const testData = testCase.getAttribute('data-test');
+                dataInput.value = testData;
+                
+                const data = parseData(testData);
+                segmentTree = new SegmentTreeVariance(data);
+                updateArrayDisplay();
+                visualizeTree();
+                
+                addResult('Caso de prueba', `Cargado: [${testData}]`);
+            });
+        });
+
+        // Inicialización
+        updateArrayDisplay();
+    </script>
+</body>
+</html>

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tests Árbol de Segmentos para Varianza</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-title {
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .pass {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .fail {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .summary {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tests del Árbol de Segmentos para Varianza</h1>
+    <div id="testsResults"></div>
+
+    <script>
+        // Implementación del Árbol de Segmentos para Varianza
+        class SegmentTreeVariance {
+            constructor(data) {
+                this.n = data.length;
+                this.tree = new Array(4 * this.n).fill(null);
+                this.data = [...data];
+                this._build(data, 1, 0, this.n - 1);
+            }
+
+            _build(data, node, start, end) {
+                if (start === end) {
+                    const val = data[start];
+                    this.tree[node] = { sum: val, sqSum: val * val };
+                } else {
+                    const mid = Math.floor((start + end) / 2);
+                    const leftChild = 2 * node;
+                    const rightChild = 2 * node + 1;
+
+                    this._build(data, leftChild, start, mid);
+                    this._build(data, rightChild, mid + 1, end);
+
+                    this.tree[node] = {
+                        sum: this.tree[leftChild].sum + this.tree[rightChild].sum,
+                        sqSum: this.tree[leftChild].sqSum + this.tree[rightChild].sqSum
+                    };
+                }
+            }
+
+            update(idx, val) {
+                if (idx < 0 || idx >= this.n) {
+                    throw new Error("Índice fuera de rango");
+                }
+                this.data[idx] = val;
+                this._update(1, 0, this.n - 1, idx, val);
+            }
+
+            _update(node, start, end, idx, val) {
+                if (start === end) {
+                    this.tree[node] = { sum: val, sqSum: val * val };
+                } else {
+                    const mid = Math.floor((start + end) / 2);
+                    const leftChild = 2 * node;
+                    const rightChild = 2 * node + 1;
+
+                    if (idx <= mid) {
+                        this._update(leftChild, start, mid, idx, val);
+                    } else {
+                        this._update(rightChild, mid + 1, end, idx, val);
+                    }
+
+                    this.tree[node] = {
+                        sum: this.tree[leftChild].sum + this.tree[rightChild].sum,
+                        sqSum: this.tree[leftChild].sqSum + this.tree[rightChild].sqSum
+                    };
+                }
+            }
+
+            _query(node, start, end, l, r) {
+                if (r < start || end < l) {
+                    return { sum: 0, sqSum: 0 };
+                }
+
+                if (l <= start && end <= r) {
+                    return this.tree[node];
+                }
+
+                const mid = Math.floor((start + end) / 2);
+                const p1 = this._query(2 * node, start, mid, l, r);
+                const p2 = this._query(2 * node + 1, mid + 1, end, l, r);
+
+                return {
+                    sum: p1.sum + p2.sum,
+                    sqSum: p1.sqSum + p2.sqSum
+                };
+            }
+
+            getVariance(l, r) {
+                if (l > r || l < 0 || r >= this.n) return 0;
+
+                const result = this._query(1, 0, this.n - 1, l, r);
+                const nItems = r - l + 1;
+                if (nItems === 0) return 0;
+
+                const mean = result.sum / nItems;
+                const variance = (result.sqSum / nItems) - (mean * mean);
+
+                return variance;
+            }
+        }
+
+        // Función para calcular varianza manualmente (para verificación)
+        function calcularVarianzaManual(array) {
+            if (array.length === 0) return 0;
+            
+            const n = array.length;
+            const sum = array.reduce((a, b) => a + b, 0);
+            const mean = sum / n;
+            const sqSum = array.reduce((a, b) => a + Math.pow(b - mean, 2), 0);
+            
+            return sqSum / n;
+        }
+
+        // Función para ejecutar y mostrar tests
+        function ejecutarTests() {
+            const testsResults = document.getElementById('testsResults');
+            let testsPasados = 0;
+            let testsTotales = 0;
+
+            function test(nombre, funcion) {
+                testsTotales++;
+                const testDiv = document.createElement('div');
+                testDiv.className = 'test-container';
+                testDiv.innerHTML = `<h3 class="test-title">${nombre}</h3>`;
+                
+                try {
+                    funcion();
+                    testDiv.innerHTML += `<div class="test-result pass">✅ PASÓ</div>`;
+                    testsPasados++;
+                } catch (error) {
+                    testDiv.innerHTML += `<div class="test-result fail">❌ FALLÓ: ${error.message}</div>`;
+                }
+                
+                testsResults.appendChild(testDiv);
+            }
+
+            function assert(condicion, mensaje) {
+                if (!condicion) {
+                    throw new Error(mensaje);
+                }
+            }
+
+            function assertCasiIgual(actual, esperado, tolerancia = 1e-10) {
+                if (Math.abs(actual - esperado) > tolerancia) {
+                    throw new Error(`Esperado: ${esperado}, Obtenido: ${actual}`);
+                }
+            }
+
+            // Test 1: Datos constantes (varianza = 0)
+            test("Datos constantes - varianza debe ser 0", () => {
+                const datos = [5, 5, 5, 5, 5];
+                const arbol = new SegmentTreeVariance(datos);
+                const varianza = arbol.getVariance(0, 4);
+                assertCasiIgual(varianza, 0);
+                
+                const manual = calcularVarianzaManual(datos);
+                assertCasiIgual(varianza, manual);
+            });
+
+            // Test 2: Secuencia [1,2,3,4,5] (varianza conocida = 2)
+            test("Secuencia [1,2,3,4,5] - varianza debe ser 2", () => {
+                const datos = [1, 2, 3, 4, 5];
+                const arbol = new SegmentTreeVariance(datos);
+                const varianza = arbol.getVariance(0, 4);
+                assertCasiIgual(varianza, 2);
+                
+                const manual = calcularVarianzaManual(datos);
+                assertCasiIgual(varianza, manual);
+            });
+
+            // Test 3: Subrango [0,2] de [1,2,3,4,5] = [1,2,3]
+            test("Subrango [0,2] de [1,2,3,4,5] - varianza ≈ 0.666...", () => {
+                const datos = [1, 2, 3, 4, 5];
+                const arbol = new SegmentTreeVariance(datos);
+                const varianza = arbol.getVariance(0, 2);
+                const esperado = 0.6666666666666666;
+                assertCasiIgual(varianza, esperado);
+                
+                const subarray = datos.slice(0, 3);
+                const manual = calcularVarianzaManual(subarray);
+                assertCasiIgual(varianza, manual);
+            });
+
+            // Test 4: Actualización y nueva consulta
+            test("Actualización de valor y recálculo", () => {
+                const datos = [1, 2, 3, 4, 5];
+                const arbol = new SegmentTreeVariance(datos);
+                
+                arbol.update(2, 10); // Array queda: [1, 2, 10, 4, 5]
+                
+                const varianza = arbol.getVariance(0, 4);
+                const esperado = 9.84;
+                assertCasiIgual(varianza, esperado);
+                
+                assert(arbol.data[2] === 10, "El array interno no se actualizó correctamente");
+            });
+
+            // Test 5: Un solo elemento (varianza = 0)
+            test("Un solo elemento - varianza debe ser 0", () => {
+                const datos = [7];
+                const arbol = new SegmentTreeVariance(datos);
+                const varianza = arbol.getVariance(0, 0);
+                assertCasiIgual(varianza, 0);
+            });
+
+            // Test 6: Datos con alta variabilidad
+            test("Datos con alta variabilidad", () => {
+                const datos = [1, 100, 1, 100, 1];
+                const arbol = new SegmentTreeVariance(datos);
+                const varianza = arbol.getVariance(0, 4);
+                const esperado = 2352.24;
+                assertCasiIgual(varianza, esperado);
+                
+                const manual = calcularVarianzaManual(datos);
+                assertCasiIgual(varianza, manual);
+            });
+
+            // Test 7: Múltiples subrangos
+            test("Múltiples consultas de subrangos", () => {
+                const datos = [2, 4, 6, 8, 10, 12, 14, 16];
+                const arbol = new SegmentTreeVariance(datos);
+                
+                const varianza1 = arbol.getVariance(0, 3);
+                const manual1 = calcularVarianzaManual([2,4,6,8]);
+                assertCasiIgual(varianza1, manual1);
+                
+                const varianza2 = arbol.getVariance(2, 5);
+                const manual2 = calcularVarianzaManual([6,8,10,12]);
+                assertCasiIgual(varianza2, manual2);
+                
+                const varianza3 = arbol.getVariance(4, 7);
+                const manual3 = calcularVarianzaManual([10,12,14,16]);
+                assertCasiIgual(varianza3, manual3);
+            });
+
+            // Test 8: Múltiples actualizaciones
+            test("Múltiples actualizaciones secuenciales", () => {
+                const datos = [1, 2, 3, 4, 5];
+                const arbol = new SegmentTreeVariance(datos);
+                
+                arbol.update(0, 10);
+                let varianza1 = arbol.getVariance(0, 4);
+                let manual1 = calcularVarianzaManual([10,2,3,4,5]);
+                assertCasiIgual(varianza1, manual1);
+                
+                arbol.update(4, 20);
+                let varianza2 = arbol.getVariance(0, 4);
+                let manual2 = calcularVarianzaManual([10,2,3,4,20]);
+                assertCasiIgual(varianza2, manual2);
+                
+                arbol.update(2, 15);
+                let varianza3 = arbol.getVariance(0, 4);
+                let manual3 = calcularVarianzaManual([10,2,15,4,20]);
+                assertCasiIgual(varianza3, manual3);
+            });
+
+            // Test 9: Validación de índices
+            test("Validación de índices fuera de rango", () => {
+                const datos = [1, 2, 3];
+                const arbol = new SegmentTreeVariance(datos);
+                
+                try {
+                    arbol.update(-1, 10);
+                    assert(false, "Debería haber lanzado error por índice negativo");
+                } catch (e) {
+                    assert(e.message === "Índice fuera de rango", "Mensaje de error incorrecto");
+                }
+                
+                try {
+                    arbol.update(5, 10);
+                    assert(false, "Debería haber lanzado error por índice demasiado grande");
+                } catch (e) {
+                    assert(e.message === "Índice fuera de rango", "Mensaje de error incorrecto");
+                }
+                
+                const varianza = arbol.getVariance(2, 1);
+                assertCasiIgual(varianza, 0);
+            });
+
+            // Test 10: Árbol con muchos elementos
+            test("Árbol con 1000 elementos", () => {
+                const n = 1000;
+                const datos = Array.from({length: n}, (_, i) => i + 1);
+                const arbol = new SegmentTreeVariance(datos);
+                
+                const varianzaCompleta = arbol.getVariance(0, n - 1);
+                const manualCompleta = calcularVarianzaManual(datos);
+                assertCasiIgual(varianzaCompleta, manualCompleta);
+                
+                const varianzaParcial = arbol.getVariance(100, 200);
+                const subarray = datos.slice(100, 201);
+                const manualParcial = calcularVarianzaManual(subarray);
+                assertCasiIgual(varianzaParcial, manualParcial);
+                
+                arbol.update(500, 1000);
+                const varianzaActualizada = arbol.getVariance(490, 510);
+                datos[500] = 1000;
+                const subarrayActualizado = datos.slice(490, 511);
+                const manualActualizado = calcularVarianzaManual(subarrayActualizado);
+                assertCasiIgual(varianzaActualizada, manualActualizado);
+            });
+
+            // Mostrar resumen
+            const summary = document.createElement('div');
+            summary.className = 'summary';
+            summary.innerHTML = `Resumen: ${testsPasados}/${testsTotales} pruebas pasadas (${((testsPasados / testsTotales) * 100).toFixed(2)}%)`;
+            testsResults.appendChild(summary);
+
+            if (testsPasados === testsTotales) {
+                summary.innerHTML += "<br>🎉 ¡TODAS LAS PRUEBAS PASARON!";
+            } else {
+                summary.innerHTML += "<br>❌ Algunas pruebas fallaron.";
+            }
+        }
+
+        // Ejecutar los tests cuando se cargue la página
+        window.onload = ejecutarTests;
+    </script>
+</body>
+</html>
